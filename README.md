@@ -1,4 +1,4 @@
-# SoulChat
+# SoulChat Plugin
 
 Create AI companions with soul — from chat logs, books, or a simple description.
 
