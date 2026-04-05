@@ -48,11 +48,6 @@ What happens 会发生什么：
 3. Creates a global `soulchat` command 创建全局 `soulchat` 命令
 4. Launches Claude Code with SoulChat loaded 自动启动 Claude Code 并加载 SoulChat
 
-After install, reopen terminal and run anytime 安装后重新打开终端，随时运行：
-```bash
-soulchat
-```
-
 ### Option B: Manual Setup 手动安装
 
 For users comfortable with the terminal who want more control.
@@ -70,11 +65,24 @@ Then inside Claude Code, type `/soulchat` to start.
 
 在 Claude Code 中输入 `/soulchat` 开始。
 
-To launch again later, `cd` into the soulchat folder and run the same command 之后再次启动，进入 soulchat 目录运行同样的命令：
+---
+
+## Launch Again 再次启动
+
+After closing the terminal, here's how to get back in 关闭终端后，如何再次进入：
+
+**If you used Option A 如果你用了一键安装：**
 ```bash
-cd soulchat
-claude --plugin-dir .
+soulchat
 ```
+
+**If `soulchat` command is not found, or you used Option B 如果命令找不到，或用了手动安装：**
+```bash
+cd soulchat                # Go to the folder you cloned 进入你 clone 的目录
+claude --plugin-dir .      # Launch Claude Code with SoulChat 启动 Claude Code 并加载 SoulChat
+```
+
+Then type `/soulchat` to start chatting. 然后输入 `/soulchat` 开始聊天。
 
 You can also place materials directly in `input/` before launching, or provide file paths during the guided flow.
 
