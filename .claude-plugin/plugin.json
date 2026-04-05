@@ -1,0 +1,8 @@
+{
+  "name": "soulchat",
+  "description": "Extract AI personas from books, chat logs, or descriptions and have persistent in-character conversations. 从素材提取人格并持续角色聊天。",
+  "version": "0.1.0",
+  "author": {
+    "name": "marcleecheng"
+  }
+}

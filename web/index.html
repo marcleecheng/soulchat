@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoulChat Setup</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --border: #e5e5e5;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #aeaeb2;
+    --accent: #1d1d1f;
+    --accent-hover: #424245;
+    --green: #34c759;
+    --radius: 12px;
+    --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  body {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", "PingFang SC", sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Language switcher */
+  .lang-switch {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    display: flex;
+    gap: 2px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    padding: 2px;
+    z-index: 10;
+  }
+  .lang-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .lang-btn:hover { color: var(--text-primary); }
+  .lang-btn.active {
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .wizard { width: 100%; max-width: 520px; }
+
+  /* Steps */
+  .step {
+    display: none;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .step.active { display: block; }
+  .step.visible { opacity: 1; transform: translateY(0); }
+
+  /* Progress */
+  .progress {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 48px;
+    justify-content: center;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); transition: var(--transition);
+  }
+  .dot.active { background: var(--text-primary); }
+  .dot.done { background: var(--green); }
+
+  /* Typography */
+  h1 {
+    font-size: 2.6rem; font-weight: 700;
+    letter-spacing: -0.03em; margin-bottom: 12px; text-align: center;
+  }
+  h2 {
+    font-size: 1.6rem; font-weight: 600;
+    letter-spacing: -0.02em; margin-bottom: 8px; text-align: center;
+  }
+  .desc {
+    font-size: 1.05rem; color: var(--text-secondary);
+    text-align: center; line-height: 1.6; margin-bottom: 40px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 4px; background: #f0f0f0;
+    border-radius: 10px; padding: 3px; margin-bottom: 24px;
+  }
+  .tab {
+    flex: 1; padding: 10px 0; text-align: center;
+    font-size: 0.9rem; font-weight: 500; color: var(--text-secondary);
+    background: transparent; border: none; border-radius: 8px;
+    cursor: pointer; transition: var(--transition);
+  }
+  .tab:hover { color: var(--text-primary); }
+  .tab.active {
+    background: var(--surface); color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .input-panel { display: none; }
+  .input-panel.active { display: block; }
+
+  /* Dropzone */
+  .dropzone {
+    border: 1.5px dashed var(--border); border-radius: var(--radius);
+    padding: 48px 24px; text-align: center;
+    cursor: pointer; transition: var(--transition); background: var(--surface);
+  }
+  .dropzone:hover { border-color: #c7c7cc; }
+  .dropzone.dragover { border-color: var(--text-primary); background: #f5f5f7; }
+  .dropzone .label { font-size: 1rem; font-weight: 500; margin-bottom: 6px; }
+  .dropzone .hint { font-size: 0.82rem; color: var(--text-tertiary); }
+  .file-info { margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary); }
+  input[type="file"] { display: none; }
+
+  /* Textarea */
+  .paste-area {
+    width: 100%; min-height: 160px; padding: 16px 18px;
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+    color: var(--text-primary); font-size: 0.95rem; font-family: inherit;
+    line-height: 1.7; resize: vertical; transition: var(--transition);
+  }
+  .paste-area::placeholder { color: var(--text-tertiary); }
+  .paste-area:focus { outline: none; border-color: var(--text-primary); }
+
+  .paste-name {
+    margin-top: 12px; width: 100%; padding: 12px 18px;
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+    color: var(--text-primary); font-size: 0.9rem; font-family: inherit; transition: var(--transition);
+  }
+  .paste-name::placeholder { color: var(--text-tertiary); }
+  .paste-name:focus { outline: none; border-color: var(--text-primary); }
+
+  /* Parse result */
+  .parse-result {
+    margin-top: 16px; padding: 14px 16px; background: #f5f5f7;
+    border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary);
+    line-height: 1.5; display: none;
+  }
+  .parse-result.show { display: block; }
+  .parse-result .count { color: var(--text-primary); font-weight: 500; }
+
+  /* Button */
+  .btn {
+    margin-top: 24px; width: 100%; padding: 15px;
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius);
+    font-size: 0.95rem; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: var(--transition);
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn:disabled { background: #d2d2d7; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent; color: var(--text-secondary);
+    border: 1.5px solid var(--border); margin-top: 12px;
+  }
+  .btn-secondary:hover { border-color: #c7c7cc; color: var(--text-primary); background: transparent; }
+
+  /* Success */
+  .checkmark {
+    width: 64px; height: 64px; margin: 0 auto 24px; border-radius: 50%;
+    background: var(--green); display: flex; align-items: center;
+    justify-content: center; color: #fff; font-size: 1.8rem;
+  }
+  .closing-hint {
+    margin-top: 40px; text-align: center;
+    font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8;
+  }
+  .closing-hint .cmd {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 14px 32px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    font-family: "SF Mono", "Menlo", monospace;
+    letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 32px 16px; }
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.3rem; }
+    .dropzone { padding: 36px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Language switcher -->
+<div class="lang-switch">
+  <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+
+<div class="wizard">
+  <div class="progress">
+    <div class="dot active" id="dot-0"></div>
+    <div class="dot" id="dot-1"></div>
+    <div class="dot" id="dot-2"></div>
+  </div>
+
+  <!-- Step 0: Welcome -->
+  <div class="step active" id="step-0">
+    <h1>SoulChat</h1>
+    <p class="desc" data-zh="从对话记录、书籍、或一段描述<br>创建一个有灵魂的 AI 聊天伙伴" data-en="From chat logs, books, or a simple description<br>create an AI companion with a soul"></p>
+    <button class="btn" onclick="goTo(1)" data-zh="开始" data-en="Get Started"></button>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="step" id="step-1">
+    <h2 data-zh="上传素材" data-en="Upload Material"></h2>
+    <p class="desc" data-zh="你想模拟谁？提供相关素材" data-en="Who do you want to simulate? Provide source material"></p>
+
+    <div class="tabs">
+      <button class="tab active" data-panel="upload" data-zh="上传文件" data-en="Upload File"></button>
+      <button class="tab" data-panel="paste" data-zh="粘贴文字" data-en="Paste Text"></button>
+    </div>
+
+    <div class="input-panel active" id="panel-upload">
+      <div class="dropzone" id="dropzone">
+        <p class="label" data-zh="拖拽文件到这里，或点击选择" data-en="Drag file here, or click to browse"></p>
+        <p class="hint">PDF / ePub / TXT / Markdown / ChatGPT·Claude JSON</p>
+        <input type="file" id="fileInput" accept=".pdf,.epub,.txt,.md,.json">
+      </div>
+      <p class="file-info" id="fileName"></p>
+      <button class="btn" id="uploadBtn" disabled data-zh="解析文件" data-en="Parse File"></button>
+    </div>
+
+    <div class="input-panel" id="panel-paste">
+      <textarea class="paste-area" id="pasteText" data-zh-placeholder="粘贴对话记录、人物描述、或任意文字……&#10;&#10;例如：他说话直接，偶尔冷幽默，最常说的是「Think different」……" data-en-placeholder="Paste chat logs, character descriptions, or any text...&#10;&#10;e.g.: He speaks directly, with dry humor. His catchphrase is 'Think different'..."></textarea>
+      <input class="paste-name" id="pasteName" data-zh-placeholder="人格名称（如：乔布斯、我的朋友）" data-en-placeholder="Persona name (e.g.: Steve Jobs, My Friend)">
+      <button class="btn" id="pasteBtn" data-zh="保存素材" data-en="Save Material"></button>
+    </div>
+
+    <div class="parse-result" id="parseResult"></div>
+
+    <button class="btn" id="nextBtn" style="display:none" onclick="goTo(2)" data-zh="完成，开始聊天" data-en="Done, Start Chatting"></button>
+    <button class="btn btn-secondary" id="addMoreBtn" style="display:none" onclick="resetInput()" data-zh="继续添加素材" data-en="Add More Material"></button>
+  </div>
+
+  <!-- Step 2: Done -->
+  <div class="step" id="step-2">
+    <div class="checkmark">✓</div>
+    <h2 data-zh="准备就绪" data-en="Ready"></h2>
+    <p class="desc" data-zh="素材已解析完成，正在启动聊天..." data-en="Material parsed. Launching chat..."></p>
+    <p class="closing-hint" data-zh="请切换到终端窗口，输入：<br><span class='cmd'>/soulchat</span><br>开始聊天" data-en="Switch to your terminal and type:<br><span class='cmd'>/soulchat</span><br>to start chatting"></p>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let currentStep = 0;
+let lang = 'zh';
+
+// i18n
+const i18n = {
+  parsed: { zh: '已保存', en: 'saved' },
+  chars: { zh: '字', en: ' chars' },
+  parsing: { zh: '解析中…', en: 'Parsing…' },
+  saving: { zh: '保存中…', en: 'Saving…' },
+};
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-btn[onclick="setLang('${l}')"]`).classList.add('active');
+  document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+
+  // Update all text content
+  document.querySelectorAll('[data-zh]').forEach(el => {
+    const text = el.getAttribute(`data-${l}`);
+    if (text) el.innerHTML = text;
+  });
+
+  // Update placeholders
+  document.querySelectorAll('[data-zh-placeholder]').forEach(el => {
+    const ph = el.getAttribute(`data-${l}-placeholder`);
+    if (ph) el.placeholder = ph;
+  });
+}
+
+function goTo(n) {
+  for (let i = 0; i < 3; i++) {
+    const dot = $(`#dot-${i}`);
+    dot.classList.remove('active', 'done');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  }
+
+  const cur = $(`#step-${currentStep}`);
+  cur.classList.remove('visible');
+  setTimeout(() => {
+    cur.classList.remove('active');
+    const next = $(`#step-${n}`);
+    next.classList.add('active');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => next.classList.add('visible'));
+    });
+    currentStep = n;
+
+    if (n === 2) finishSetup();
+  }, 300);
+}
+
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => $('#step-0').classList.add('visible'));
+});
+
+// Init language
+setLang('zh');
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $(`#panel-${tab.dataset.panel}`).classList.add('active');
+  });
+});
+
+// Drag & drop
+const dropzone = $('#dropzone');
+const fileInput = $('#fileInput');
+let selectedFile = null;
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) pickFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files.length) pickFile(fileInput.files[0]); });
+
+function pickFile(file) {
+  selectedFile = file;
+  $('#fileName').textContent = `${file.name}  (${(file.size / 1024).toFixed(1)} KB)`;
+  $('#uploadBtn').disabled = false;
+}
+
+// Upload
+$('#uploadBtn').addEventListener('click', async () => {
+  if (!selectedFile) return;
+  const btn = $('#uploadBtn');
+  btn.disabled = true;
+  btn.textContent = i18n.parsing[lang];
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+
+  try {
+    const res = await fetch('/upload', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.ok) onParsed(data);
+    else showParseError(data.error);
+  } catch (e) {
+    showParseError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = btn.getAttribute(`data-${lang}`);
+  }
+});
+
+// Paste
+$('#pasteBtn').addEventListener('click', async () => {
+  const text = $('#pasteText').value.trim();
+  if (!text) return;
+  const btn = $('#pasteBtn');
+  btn.disabled = true;
+  btn.textContent = i18n.saving[lang];
+
+  const form = new FormData();
+  form.append('text', text);
+  form.append('name', $('#pasteName').value.trim() || 'paste');
+
+  try {
+    const res = await fetch('/paste', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.ok) onParsed(data);
+    else showParseError(data.error);
+  } catch (e) {
+    showParseError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = btn.getAttribute(`data-${lang}`);
+  }
+});
+
+function onParsed(data) {
+  const el = $('#parseResult');
+  el.innerHTML = `<span class="count">${data.output}</span> ${i18n.parsed[lang]}（${data.chars.toLocaleString()}${i18n.chars[lang]}）`;
+  el.classList.add('show');
+
+  $('#uploadBtn').style.display = 'none';
+  $('#pasteBtn').style.display = 'none';
+  $('#nextBtn').style.display = 'block';
+  $('#addMoreBtn').style.display = 'block';
+}
+
+function showParseError(msg) {
+  const el = $('#parseResult');
+  el.innerHTML = `<span style="color:#ff3b30">${msg}</span>`;
+  el.classList.add('show');
+}
+
+function resetInput() {
+  $('#parseResult').classList.remove('show');
+  $('#uploadBtn').style.display = 'block';
+  $('#uploadBtn').disabled = true;
+  $('#pasteBtn').style.display = 'block';
+  $('#nextBtn').style.display = 'none';
+  $('#addMoreBtn').style.display = 'none';
+  $('#fileName').textContent = '';
+  $('#pasteText').value = '';
+  $('#pasteName').value = '';
+  selectedFile = null;
+  fileInput.value = '';
+}
+
+function finishSetup() {
+  setTimeout(() => {
+    fetch(`/shutdown?lang=${lang}`, { method: 'POST' }).catch(() => {});
+  }, 2000);
+}
+</script>
+</body>
+</html>
