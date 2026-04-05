@@ -57,15 +57,34 @@ EOF
 chmod +x "$LAUNCHER"
 
 LINK_TARGET=""
-if [ -d "$HOME/.local/bin" ]; then
+LINKED=false
+# Prefer ~/.local/bin (create if needed — uv uses this too)
+if [ -d "$HOME/.local/bin" ] || mkdir -p "$HOME/.local/bin" 2>/dev/null; then
   LINK_TARGET="$HOME/.local/bin/soulchat"
 elif [ -d "/usr/local/bin" ] && [ -w "/usr/local/bin" ]; then
   LINK_TARGET="/usr/local/bin/soulchat"
 fi
 
 if [ -n "$LINK_TARGET" ]; then
-  ln -sf "$LAUNCHER" "$LINK_TARGET" 2>/dev/null && \
-    msg "✓ 全局命令已创建：soulchat" "✓ Global command created: soulchat" || true
+  if ln -sf "$LAUNCHER" "$LINK_TARGET" 2>/dev/null; then
+    LINKED=true
+    LINK_DIR="$(dirname "$LINK_TARGET")"
+    # Auto-add to PATH if not already there
+    if ! echo "$PATH" | tr ':' '\n' | grep -qx "$LINK_DIR"; then
+      SHELL_RC="$HOME/.zshrc"
+      [ -n "$BASH_VERSION" ] && SHELL_RC="$HOME/.bashrc"
+      if ! grep -q "$LINK_DIR" "$SHELL_RC" 2>/dev/null; then
+        echo "export PATH=\"$LINK_DIR:\$PATH\"" >> "$SHELL_RC"
+      fi
+      export PATH="$LINK_DIR:$PATH"
+    fi
+    msg "✓ 全局命令已创建：soulchat" "✓ Global command created: soulchat"
+  fi
+fi
+
+if [ "$LINKED" = false ]; then
+  msg "⚠ 无法创建全局命令，每次启动请运行：" "⚠ Could not create global command. To launch, run:"
+  echo "  cd $SCRIPT_DIR && claude --plugin-dir ."
 fi
 
 # ── 4. Launch setup wizard ──
@@ -94,6 +113,13 @@ fi
 echo ""
 msg "✓ 素材已就绪" "✓ Materials ready"
 msg "正在启动 SoulChat..." "Launching SoulChat..."
+echo ""
+if [ "$LINKED" = true ]; then
+  msg "💡 下次启动只需输入：soulchat" "💡 Next time, just run: soulchat"
+else
+  msg "💡 下次启动请运行：" "💡 Next time, run:"
+  echo "  cd $SCRIPT_DIR && claude --plugin-dir ."
+fi
 echo ""
 
 cd "$SCRIPT_DIR"

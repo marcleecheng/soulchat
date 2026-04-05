@@ -37,17 +37,18 @@ Best for most users. A setup wizard opens in your browser to guide you through e
 适合大多数用户。浏览器会打开安装向导，一步步引导你完成。
 
 ```bash
-git clone https://github.com/xxx/soulchat
+git clone https://github.com/marcleecheng/soulchat
 cd soulchat
 ./install.sh
 ```
 
-What happens:
+What happens 会发生什么：
 1. Installs dependencies automatically 自动安装依赖
 2. Opens a browser wizard — upload your materials (books, chat exports, etc.) 打开浏览器向导——上传你的素材
-3. Launches Claude Code with SoulChat loaded 自动启动 Claude Code 并加载 SoulChat
+3. Creates a global `soulchat` command 创建全局 `soulchat` 命令
+4. Launches Claude Code with SoulChat loaded 自动启动 Claude Code 并加载 SoulChat
 
-After install, use the global command anytime 安装后随时使用全局命令：
+After install, reopen terminal and run anytime 安装后重新打开终端，随时运行：
 ```bash
 soulchat
 ```
@@ -59,7 +60,7 @@ For users comfortable with the terminal who want more control.
 适合熟悉终端、想要更多控制的用户。
 
 ```bash
-git clone https://github.com/xxx/soulchat
+git clone https://github.com/marcleecheng/soulchat
 cd soulchat
 uv sync                          # Install dependencies 安装依赖
 claude --plugin-dir .             # Launch with plugin loaded 启动并加载插件
@@ -68,6 +69,11 @@ claude --plugin-dir .             # Launch with plugin loaded 启动并加载插
 Then inside Claude Code, type `/soulchat` to start.
 
 在 Claude Code 中输入 `/soulchat` 开始。
+
+To launch again later 之后再次启动：
+```bash
+cd /path/to/soulchat && claude --plugin-dir .
+```
 
 You can also place materials directly in `input/` before launching, or provide file paths during the guided flow.
 
