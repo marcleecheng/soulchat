@@ -70,9 +70,10 @@ Then inside Claude Code, type `/soulchat` to start.
 
 在 Claude Code 中输入 `/soulchat` 开始。
 
-To launch again later 之后再次启动：
+To launch again later, `cd` into the soulchat folder and run the same command 之后再次启动，进入 soulchat 目录运行同样的命令：
 ```bash
-cd /path/to/soulchat && claude --plugin-dir .
+cd soulchat
+claude --plugin-dir .
 ```
 
 You can also place materials directly in `input/` before launching, or provide file paths during the guided flow.
